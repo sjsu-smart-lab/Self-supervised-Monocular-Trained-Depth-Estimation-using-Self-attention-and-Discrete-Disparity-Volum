@@ -15,7 +15,6 @@ from kitti_utils import generate_depth_map
 def export_gt_depths_kitti(opt):
     """
     Generate ground-truth data and store as .npz file
-    Adopted from https://github.com/nianticlabs/monodepth2
     """
     split_folder = os.path.join(os.path.dirname(__file__), "splits", opt.split)
     lines = readlines(os.path.join(split_folder, "test_files.txt"))
