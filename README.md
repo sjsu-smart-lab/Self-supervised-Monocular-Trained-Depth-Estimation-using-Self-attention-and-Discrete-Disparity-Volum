@@ -22,8 +22,8 @@ Setup procedure
 
            pip install -r requirements.txt
            
-    This project use Python 3.6.6, cuda 10.1, pytorch 0.4.1 
-    torchvision 0.2.1, tensorboardX 1.4 and opencv.
+    This project uses Python 3.6.6, cuda 10.1, pytorch 0.4.1, torchvision 0.2.1, tensorboardX 1.4 and opencv.
+    The experiments were conducted using NVIDIA Tesla P100 GPU and CPU environment - Intel Xeon E5-2660 v4 (2.0GHz, 35M Cache). 
 
 3. Download the required data sets.  
       The data set that is used in this project are [KITTI Raw](http://www.cvlibs.net/datasets/kitti/raw_data.php)
@@ -80,5 +80,6 @@ Below are the results obtained on the KITTI Raw test set for the models trained 
 
 References
 -----------
-https://github.com/nianticlabs/monodepth2       
-https://github.com/openseg-group/OCNet.pytorch
+1. Monodepth2 - https://github.com/nianticlabs/monodepth2       
+2. OCNet - https://github.com/openseg-group/OCNet.pytorch
+3. DORN - https://arxiv.org/abs/1806.02446
