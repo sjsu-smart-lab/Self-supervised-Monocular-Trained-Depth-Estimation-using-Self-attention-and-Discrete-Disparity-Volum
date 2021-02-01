@@ -10,7 +10,9 @@ This project is a reproduction of the CVPR 2020 paper
 
 It proposes to close the performance gap with the fully-supervised
 methods using only the monocular sequence for training with the help
-of additional layers - self-attention and discrete disparity volume. 
+of additional layers - self-attention and discrete disparity volume.
+
+<img src='depthComparison.png'> 
 
 Setup procedure
 ----------------
