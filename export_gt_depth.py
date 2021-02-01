@@ -5,18 +5,26 @@ import os
 import argparse
 import numpy as np
 import PIL.Image as pil
-import cv2
-from pathlib import Path
 
 from utils import readlines
 from kitti_utils import generate_depth_map
 
 
-def export_gt_depths_kitti(opt):
-    """
-    Generate ground-truth data and store as .npz file
-    Adopted from https://github.com/nianticlabs/monodepth2
-    """
+def export_gt_depths_kitti():
+
+    parser = argparse.ArgumentParser(description='export_gt_depth')
+
+    parser.add_argument('--data_path',
+                        type=str,
+                        help='path to the root of the KITTI data',
+                        required=True)
+    parser.add_argument('--split',
+                        type=str,
+                        help='which split to export gt from',
+                        required=True,
+                        choices=["eigen", "eigen_benchmark"])
+    opt = parser.parse_args()
+
     split_folder = os.path.join(os.path.dirname(__file__), "splits", opt.split)
     lines = readlines(os.path.join(split_folder, "test_files.txt"))
 
@@ -47,54 +55,5 @@ def export_gt_depths_kitti(opt):
     np.savez_compressed(output_path, data=np.array(gt_depths))
 
 
-def export_gt_depths_cityscapes(opt):
-    """
-    Load ground-truth in the dataset an store as .npz file
-    """
-    split_folder = os.path.join(os.path.dirname(__file__), "splits")
-    gt_depths = []
-    print("Exporting ground truth depths for {}".format(opt.dataset))
-    folder_path = opt.data_path
-    all_imgs = sorted(list(Path(folder_path).glob('**/*.png')))
-    for line in all_imgs:
-        # gt_depth_path = os.path.join(opt.data_path, line)
-        gt_depth = cv2.imread(str(line), cv2.IMREAD_UNCHANGED)
-        gt_depth = (cv2.resize(gt_depth, (1242, 375), cv2.INTER_AREA))
-
-        gt_depths.append(gt_depth.astype(np.float32))
-
-    output_path = os.path.join(split_folder, "gt_depths_cityscapes.npz")
-
-    print("Saving to {}".format(output_path))
-
-    np.savez_compressed(output_path, data=np.array(gt_depths))
-
-
-def main():
-    parser = argparse.ArgumentParser(description='export_gt_depth')
-
-    parser.add_argument('--data_path',
-                        type=str,
-                        help='path to the root of the KITTI data',
-                        required=True)
-    parser.add_argument('--dataset',
-                        type=str,
-                        help='which split to export gt from',
-                        required=True,
-                        choices=["kitti", "cityscapes"])
-    parser.add_argument('--split',
-                        type=str,
-                        help='which split to export gt from',
-                        choices=["eigen", "eigen_benchmark"])
-
-    opt = parser.parse_args()
-
-
-    if opt.dataset == 'kitti':
-        export_gt_depths_kitti(opt)
-    elif opt.dataset == 'cityscapes':
-        export_gt_depths_cityscapes(opt)
-
-
 if __name__ == "__main__":
-    main()
+    export_gt_depths_kitti()

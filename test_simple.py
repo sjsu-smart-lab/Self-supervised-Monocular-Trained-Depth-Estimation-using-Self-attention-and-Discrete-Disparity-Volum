@@ -2,19 +2,19 @@ from __future__ import absolute_import, division, print_function
 
 import os
 import sys
-import time
 import glob
 import argparse
 import numpy as np
 import PIL.Image as pil
 import matplotlib as mpl
 import matplotlib.cm as cm
-
+import time
 import torch
 from torchvision import transforms, datasets
 
 import networks
 from layers import disp_to_depth
+from utils import download_model_if_doesnt_exist
 
 
 def parse_args():
@@ -36,19 +36,16 @@ def parse_args():
     parser.add_argument("--no_self_attention",
                         help='if set, disables self-attn',
                         action='store_true')
-    parser.add_argument("--discretization",
-                        type=str,
-                        help="disparity discretization method",
-                        default="UD",
-                        choices=["SID", "UD"])
 
     return parser.parse_args()
 
 
 def print_size_of_model(model):
     """ Print the size of the model.
+
     Args:
         model: model whose size needs to be determined
+
     """
     torch.save(model.state_dict(), "temp.p")
     print('Size of the model(MB):', os.path.getsize("temp.p") / 1e6)
@@ -59,28 +56,33 @@ def test_simple(args):
     """Function to predict for a single image or folder of images
     """
     assert args.model_name is not None, \
-        "You must specify the --model_name parameter."
+        "You must specify the --model_name parameter; see README.md for an example"
 
     if torch.cuda.is_available() and not args.no_cuda:
         device = torch.device("cuda")
     else:
         device = torch.device("cpu")
 
+    # download_model_if_doesnt_exist(args.model_name)
+    # model_path = os.path.join("models", args.model_name)
     print("-> Loading model from ", args.model_name)
     encoder_path = os.path.join(args.model_name, "encoder.pth")
     depth_decoder_path = os.path.join(args.model_name, "depth.pth")
 
     # LOADING PRETRAINED MODEL
+
     if args.no_ddv:
-        encoder = networks.get_resnet101_asp_oc_dsn(
-            2048, args.no_self_attention, False)
+        encoder = networks.get_resnet101_oc(
+            18, False,
+            512, args.no_self_attention)
         depth_decoder = networks.DepthDecoder(
             encoder.num_ch_enc)
     else:
-        encoder = networks.get_resnet101_asp_oc_dsn(
-            128, args.no_self_attention, False)
+        encoder = networks.get_resnet101_oc(
+            18, False,
+            128, args.no_self_attention)
         depth_decoder = networks.MSDepthDecoder(
-            encoder.num_ch_enc, discretization=args.discretization)
+            encoder.num_ch_enc)
 
     print("   Loading pretrained encoder")
     loaded_dict_enc = torch.load(encoder_path, map_location=device)
@@ -137,17 +139,10 @@ def test_simple(args):
 
             st = time.time()
             features = encoder(input_image)
-            if args.no_ddv:
-                outputs = depth_decoder(features)
-            else:
-                all_features = {}
-                all_features['conv3'] = features[0]
-                all_features['layer1'] = features[1]
-                all_features['output'] = features[-1]
-                outputs = depth_decoder(all_features)
+            outputs = depth_decoder(features)
             et = time.time()
-            print('Elapsed time = {:0.4f} ms'.format((et - st) * 1000))
-            timings.append((et - st) * 1000)
+            print('Elapsed time = {:0.4f} ms'.format((et-st)*1000))
+            timings.append((et-st)*1000)
 
             disp = outputs[("disp", 0)]
             disp_resized = torch.nn.functional.interpolate(

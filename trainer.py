@@ -45,10 +45,20 @@ class Trainer:
         if self.opt.use_stereo:
             self.opt.frame_ids.append("s")
 
+        # self.models["encoder"] = networks.ResnetEncoder(
+        #     self.opt.num_layers, self.opt.weights_init == "pretrained")
+        # self.models["encoder"].to(self.device)
+        # self.parameters_to_train += list(self.models["encoder"].parameters())
+        #
+        # self.models["depth"] = networks.DepthDecoder(
+        #     self.models["encoder"].num_ch_enc, self.opt.scales)
+        # self.models["depth"].to(self.device)
+        # self.parameters_to_train += list(self.models["depth"].parameters())
+
         if self.opt.no_ddv:
-            self.models["encoder"] = networks.get_resnet101_asp_oc_dsn(
-                2048, self.opt.no_self_attention,
-                self.opt.weights_init == "pretrained")
+            self.models["encoder"] = networks.get_resnet101_oc(
+                self.opt.num_layers, self.opt.weights_init == "pretrained",
+                512, self.opt.no_self_attention)
             self.models["encoder"].to(self.device)
             self.parameters_to_train += list(self.models["encoder"].parameters())
             self.models["depth"] = networks.DepthDecoder(
@@ -56,13 +66,13 @@ class Trainer:
             self.models["depth"].to(self.device)
             self.parameters_to_train += list(self.models["depth"].parameters())
         else:
-            self.models["encoder"] = networks.get_resnet101_asp_oc_dsn(
-                128, self.opt.no_self_attention,
-                self.opt.weights_init == "pretrained")
+            self.models["encoder"] = networks.get_resnet101_oc(
+                self.opt.num_layers, self.opt.weights_init == "pretrained",
+                128, self.opt.no_self_attention)
             self.models["encoder"].to(self.device)
             self.parameters_to_train += list(self.models["encoder"].parameters())
             self.models["depth"] = networks.MSDepthDecoder(
-                self.models["encoder"].num_ch_enc, self.opt.scales, discretization=self.opt.discretization)
+                self.models["encoder"].num_ch_enc, self.opt.scales)
             self.models["depth"].to(self.device)
             self.parameters_to_train += list(self.models["depth"].parameters())
 
@@ -251,14 +261,7 @@ class Trainer:
         else:
             # Otherwise, we only feed the image with frame_id 0 through the depth encoder
             features = self.models["encoder"](inputs["color_aug", 0, 0])
-            if self.opt.no_ddv:
-                outputs = self.models["depth"](features)
-            else:
-                all_features = {}
-                all_features['conv3'] = features[0]
-                all_features['layer1'] = features[1]
-                all_features['output'] = features[-1]
-                outputs = self.models["depth"](all_features)
+            outputs = self.models["depth"](features)
 
         if self.opt.predictive_mask:
             outputs["predictive_mask"] = self.models["predictive_mask"](features)
@@ -376,6 +379,7 @@ class Trainer:
 
                 # from the authors of https://arxiv.org/abs/1712.00175
                 if self.opt.pose_model_type == "posecnn":
+
                     axisangle = outputs[("axisangle", 0, frame_id)]
                     translation = outputs[("translation", 0, frame_id)]
 
@@ -490,7 +494,7 @@ class Trainer:
 
             if not self.opt.disable_automasking:
                 outputs["identity_selection/{}".format(scale)] = (
-                        idxs > identity_reprojection_loss.shape[1] - 1).float()
+                    idxs > identity_reprojection_loss.shape[1] - 1).float()
 
             loss += to_optimise.mean()
 
@@ -542,9 +546,9 @@ class Trainer:
         samples_per_sec = self.opt.batch_size / duration
         time_sofar = time.time() - self.start_time
         training_time_left = (
-                                     self.num_total_steps / self.step - 1.0) * time_sofar if self.step > 0 else 0
+            self.num_total_steps / self.step - 1.0) * time_sofar if self.step > 0 else 0
         print_string = "epoch {:>3} | batch {:>6} | examples/s: {:5.1f}" + \
-                       " | loss: {:.5f} | time elapsed: {} | time left: {}"
+            " | loss: {:.5f} | time elapsed: {} | time left: {}"
         print(print_string.format(self.epoch, batch_idx, samples_per_sec, loss,
                                   sec_to_hm_str(time_sofar), sec_to_hm_str(training_time_left)))
 

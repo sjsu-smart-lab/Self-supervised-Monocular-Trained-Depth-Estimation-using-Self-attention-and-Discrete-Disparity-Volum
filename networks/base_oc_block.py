@@ -10,13 +10,20 @@ from inplace_abn.bn import InPlaceABNSync, InPlaceABN
 ABN_module = InPlaceABN
 BatchNorm2d = functools.partial(ABN_module, activation='none')
 
+# elif torch_ver == '0.3':
+#     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+#     sys.path.append(os.path.join(BASE_DIR, '../inplace_abn_03'))
+#     from modules import ABN_module
+#
+#     BatchNorm2d = functools.partial(ABN_module, activation='none')
+
 
 class _SelfAttentionBlock(nn.Module):
-    """
+    '''
     The basic implementation for self-attention block/non-local block
     Input:
         N X C X H X W
-    Args:
+    Parameters:
         in_channels       : the dimension of the input feature map
         key_channels      : the dimension after the key/query transform
         value_channels    : the dimension after the value transform
@@ -24,7 +31,7 @@ class _SelfAttentionBlock(nn.Module):
     Return:
         N X C X H X W
         position-aware context features.(w/o concate or add with the input)
-    """
+    '''
 
     def __init__(self, in_channels, key_channels, value_channels, out_channels=None, scale=1):
         super(_SelfAttentionBlock, self).__init__()
@@ -33,7 +40,7 @@ class _SelfAttentionBlock(nn.Module):
         self.out_channels = out_channels
         self.key_channels = key_channels
         self.value_channels = value_channels
-        if out_channels is None:
+        if out_channels == None:
             self.out_channels = in_channels
         self.pool = nn.MaxPool2d(kernel_size=(scale, scale))
         self.f_key = nn.Sequential(
@@ -70,6 +77,8 @@ class _SelfAttentionBlock(nn.Module):
         context = self.W(context)
         if self.scale > 1:
             context = F.upsample(input=context, size=(h, w), mode='bilinear', align_corners=True)
+            # elif torch_ver == '0.3':
+            #     context = F.upsample(input=context, size=(h, w), mode='bilinear')
         return context
 
 
@@ -85,7 +94,7 @@ class SelfAttentionBlock2D(_SelfAttentionBlock):
 class BaseOC_Module(nn.Module):
     """
     Implementation of the BaseOC module
-    Args:
+    Parameters:
         in_features / out_features: the channels of the input / output feature maps.
         dropout: we choose 0.05 as the default value.
         size: you can apply multiple sizes. Here we only use one size.
@@ -123,7 +132,7 @@ class BaseOC_Module(nn.Module):
 class BaseOC_Context_Module(nn.Module):
     """
     Output only the context features.
-    Args:
+    Parameters:
         in_features / out_features: the channels of the input / output feature maps.
         dropout: specify the dropout ratio
         fusion: We provide two different fusion method, "concat" or "add"

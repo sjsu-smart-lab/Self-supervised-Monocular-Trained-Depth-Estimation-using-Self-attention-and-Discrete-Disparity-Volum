@@ -40,11 +40,6 @@ class MonodepthOptions:
                                  help="dataset to train on",
                                  default="kitti",
                                  choices=["kitti", "kitti_odom", "kitti_depth", "kitti_test"])
-        self.parser.add_argument("--discretization",
-                                 type=str,
-                                 help="disparity discretization method",
-                                 default="UD",
-                                 choices=["UD", "SID"])
         self.parser.add_argument("--png",
                                  help="if set, trains from raw KITTI png files (instead of jpgs)",
                                  action="store_true")

@@ -15,7 +15,6 @@ import networks
 
 cv2.setNumThreads(0)  # This speeds up evaluation 5x on our unix systems (OpenCV 3.3.1)
 
-
 splits_dir = os.path.join(os.path.dirname(__file__), "splits")
 
 # Models which were trained with stereo supervision were trained with a nominal
@@ -28,7 +27,7 @@ def compute_errors(gt, pred):
     """Computation of error metrics between predicted and ground truth depths
     """
     thresh = np.maximum((gt / pred), (pred / gt))
-    a1 = (thresh < 1.25     ).mean()
+    a1 = (thresh < 1.25).mean()
     a2 = (thresh < 1.25 ** 2).mean()
     a3 = (thresh < 1.25 ** 3).mean()
 
@@ -80,23 +79,24 @@ def evaluate(opt):
 
         encoder_dict = torch.load(encoder_path)
 
-        img_ext = '.png' if opt.png else '.jpg'
         dataset = datasets.KITTIRAWDataset(opt.data_path, filenames,
                                            encoder_dict['height'], encoder_dict['width'],
-                                           [0], 4, is_train=False, img_ext=img_ext)
+                                           [0], 4, is_train=False)
         dataloader = DataLoader(dataset, 16, shuffle=False, num_workers=opt.num_workers,
                                 pin_memory=True, drop_last=False)
 
         if opt.no_ddv:
-            encoder = networks.get_resnet101_asp_oc_dsn(
-                2048, opt.no_self_attention, False)
+            encoder = networks.get_resnet101_oc(
+                opt.num_layers, False,
+                512, opt.no_self_attention)
             depth_decoder = networks.DepthDecoder(
                 encoder.num_ch_enc)
         else:
-            encoder = networks.get_resnet101_asp_oc_dsn(
-                128, opt.no_self_attention, False)
+            encoder = networks.get_resnet101_oc(
+                opt.num_layers, False,
+                128, opt.no_self_attention)
             depth_decoder = networks.MSDepthDecoder(
-                encoder.num_ch_enc, discretization=opt.discretization)
+                encoder.num_ch_enc)
 
         model_dict = encoder.state_dict()
         encoder.load_state_dict({k: v for k, v in encoder_dict.items() if k in model_dict})
@@ -121,14 +121,7 @@ def evaluate(opt):
                     input_color = torch.cat((input_color, torch.flip(input_color, [3])), 0)
 
                 features = encoder(input_color)
-                if opt.no_ddv:
-                    output = depth_decoder(features)
-                else:
-                    all_features = {}
-                    all_features['conv3'] = features[0]
-                    all_features['layer1'] = features[1]
-                    all_features['output'] = features[-1]
-                    output = depth_decoder(all_features)
+                output = depth_decoder(features)
 
                 pred_disp, _ = disp_to_depth(output[("disp", 0)], opt.min_depth, opt.max_depth)
                 pred_disp = pred_disp.cpu()[:, 0].numpy()
@@ -208,7 +201,7 @@ def evaluate(opt):
             mask = np.logical_and(gt_depth > MIN_DEPTH, gt_depth < MAX_DEPTH)
 
             crop = np.array([0.40810811 * gt_height, 0.99189189 * gt_height,
-                             0.03594771 * gt_width,  0.96405229 * gt_width]).astype(np.int32)
+                             0.03594771 * gt_width, 0.96405229 * gt_width]).astype(np.int32)
             crop_mask = np.zeros(mask.shape)
             crop_mask[crop[0]:crop[1], crop[2]:crop[3]] = 1
             mask = np.logical_and(mask, crop_mask)

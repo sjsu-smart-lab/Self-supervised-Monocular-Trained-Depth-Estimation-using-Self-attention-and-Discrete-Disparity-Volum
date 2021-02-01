@@ -18,13 +18,20 @@ class ABN(nn.Module):
     def __init__(self, num_features, eps=1e-5, momentum=0.1, affine=True, activation="leaky_relu", slope=0.01):
         """Creates an Activated Batch Normalization module
 
-        Args:
-        num_features : Number of feature channels in the input and output.
-        eps : Small constant to prevent numerical issues.
-        momentum : Momentum factor applied to compute running statistics as.
-        affine : If `True` apply learned scale and shift transformation after normalization.
-        activation : Name of the activation functions, one of: `leaky_relu`, `elu` or `none`.
-        slope : Negative slope for the `leaky_relu` activation.
+        Parameters
+        ----------
+        num_features : int
+            Number of feature channels in the input and output.
+        eps : float
+            Small constant to prevent numerical issues.
+        momentum : float
+            Momentum factor applied to compute running statistics as.
+        affine : bool
+            If `True` apply learned scale and shift transformation after normalization.
+        activation : str
+            Name of the activation functions, one of: `leaky_relu`, `elu` or `none`.
+        slope : float
+            Negative slope for the `leaky_relu` activation.
         """
         super(ABN, self).__init__()
         self.num_features = num_features
@@ -79,13 +86,20 @@ class InPlaceABN(ABN):
     def __init__(self, num_features, eps=1e-5, momentum=0.1, affine=True, activation="leaky_relu", slope=0.01):
         """Creates an InPlace Activated Batch Normalization module
 
-        Args:
-        num_features : Number of feature channels in the input and output.
-        eps : mall constant to prevent numerical issues.
-        momentum : Momentum factor applied to compute running statistics as.
-        affine : If `True` apply learned scale and shift transformation after normalization.
-        activation : Name of the activation functions, one of: `leaky_relu`, `elu` or `none`.
-        slope : Negative slope for the `leaky_relu` activation.
+        Parameters
+        ----------
+        num_features : int
+            Number of feature channels in the input and output.
+        eps : float
+            Small constant to prevent numerical issues.
+        momentum : float
+            Momentum factor applied to compute running statistics as.
+        affine : bool
+            If `True` apply learned scale and shift transformation after normalization.
+        activation : str
+            Name of the activation functions, one of: `leaky_relu`, `elu` or `none`.
+        slope : float
+            Negative slope for the `leaky_relu` activation.
         """
         super(InPlaceABN, self).__init__(num_features, eps, momentum, affine, activation, slope)
 
@@ -104,14 +118,22 @@ class InPlaceABNSync(ABN):
                  slope=0.01):
         """Creates a synchronized, InPlace Activated Batch Normalization module
 
-        Args:
-        num_features : Number of feature channels in the input and output.
-        devices : IDs of the GPUs that will run the replicas of this module.
-        eps : Small constant to prevent numerical issues.
-        momentum : Momentum factor applied to compute running statistics as.
-        affine : If `True` apply learned scale and shift transformation after normalization.
-        activation : Name of the activation functions, one of: `leaky_relu`, `elu` or `none`.
-        slope : Negative slope for the `leaky_relu` activation.
+        Parameters
+        ----------
+        num_features : int
+            Number of feature channels in the input and output.
+        devices : list of int or None
+            IDs of the GPUs that will run the replicas of this module.
+        eps : float
+            Small constant to prevent numerical issues.
+        momentum : float
+            Momentum factor applied to compute running statistics as.
+        affine : bool
+            If `True` apply learned scale and shift transformation after normalization.
+        activation : str
+            Name of the activation functions, one of: `leaky_relu`, `elu` or `none`.
+        slope : float
+            Negative slope for the `leaky_relu` activation.
         """
         super(InPlaceABNSync, self).__init__(num_features, eps, momentum, affine, activation, slope)
         self.devices = devices if devices else list(range(torch.cuda.device_count()))

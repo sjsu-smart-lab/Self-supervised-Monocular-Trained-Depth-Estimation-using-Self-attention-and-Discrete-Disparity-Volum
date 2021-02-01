@@ -1,3 +1,9 @@
+# Copyright Niantic 2019. Patent Pending. All rights reserved.
+#
+# This software is licensed under the terms of the Monodepth2 licence
+# which allows for non-commercial use only, the full terms of which are made
+# available in the LICENSE file.
+
 from __future__ import absolute_import, division, print_function
 
 import os
@@ -23,14 +29,14 @@ class MonoDataset(data.Dataset):
     """Superclass for monocular dataloaders
 
     Args:
-        data_path: path where KITTI Raw dataset is stored
-        filenames: Training, validation ans test split file in 'splits' folder
-        height: height of the image
-        width: width of the image
-        frame_idxs: temporally adjacent frames
-        num_scales: scales used in the loss
-        is_train: is the dataloader used for training
-        img_ext: .png or .jpg or .jpeg
+        data_path
+        filenames
+        height
+        width
+        frame_idxs
+        num_scales
+        is_train
+        img_ext
     """
     def __init__(self,
                  data_path,
@@ -84,7 +90,7 @@ class MonoDataset(data.Dataset):
     def preprocess(self, inputs, color_aug):
         """Resize colour images to the required scales and augment if required
 
-        color_aug object is created in advance and the same augmentation is applied to all
+        We create the color_aug object in advance and apply the same augmentation to all
         images in this item. This ensures that all images input to the pose network receive the
         same augmentation.
         """

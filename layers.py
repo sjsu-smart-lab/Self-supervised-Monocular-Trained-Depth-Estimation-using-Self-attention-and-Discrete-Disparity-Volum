@@ -9,6 +9,8 @@ import torch.nn.functional as F
 
 def disp_to_depth(disp, min_depth, max_depth):
     """Convert network's sigmoid output into depth prediction
+    The formula for this conversion is given in the 'additional considerations'
+    section of the paper.
     """
     min_disp = 1 / max_depth
     max_disp = 1 / min_depth
@@ -55,6 +57,7 @@ def get_translation_matrix(translation_vector):
 
 def rot_from_axisangle(vec):
     """Convert an axisangle rotation into a 4x4 transformation matrix
+    (adapted from https://github.com/Wallacoloo/printipi)
     Input 'vec' has to be Bx1x3
     """
     angle = torch.norm(vec, 2, 2, True)

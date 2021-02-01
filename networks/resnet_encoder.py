@@ -6,11 +6,12 @@ import torch
 import torch.nn as nn
 import torchvision.models as models
 import torch.utils.model_zoo as model_zoo
+from networks.base_oc_block import BaseOC_Module
 
 
 class ResNetMultiImageInput(models.ResNet):
-    """
-    Constructs a resnet model with varying number of input images.
+    """Constructs a resnet model with varying number of input images.
+    Adapted from https://github.com/pytorch/vision/blob/master/torchvision/models/resnet.py
     """
     def __init__(self, block, layers, num_classes=1000, num_input_images=1):
         super(ResNetMultiImageInput, self).__init__(block, layers)
@@ -54,8 +55,7 @@ def resnet_multiimage_input(num_layers, pretrained=False, num_input_images=1):
 
 
 class ResnetEncoder(nn.Module):
-    """
-    Pytorch module for a resnet encoder
+    """Pytorch module for a resnet encoder
     """
     def __init__(self, num_layers, pretrained, num_input_images=1):
         super(ResnetEncoder, self).__init__()
@@ -91,3 +91,35 @@ class ResnetEncoder(nn.Module):
         self.features.append(self.encoder.layer4(self.features[-1]))
 
         return self.features
+
+
+class ResNet_context(nn.Module):
+    def __init__(self, num_classes, disable_self_attn, pretrained, num_layers):
+        self.num_ch_enc = np.array([64, 64, 128, 256, 512])
+        if num_layers > 34:
+            self.num_ch_enc[1:] *= 4
+        self.disable_self_attn = disable_self_attn
+        super(ResNet_context, self).__init__()
+
+        self.resnet_model = ResnetEncoder(num_layers, pretrained)
+
+        # extra added layers
+        self.context = nn.Sequential(
+            BaseOC_Module(in_channels=512, out_channels=512, key_channels=256, value_channels=256,
+                          dropout=0.05, sizes=([1]))
+        )
+        self.cls = nn.Conv2d(512, num_classes, kernel_size=1, stride=1, padding=0, bias=True)
+
+    def forward(self, x):
+        all_features = self.resnet_model(x)
+        if not self.disable_self_attn:
+            all_features[-1] = self.context(all_features[-1])
+
+        all_features[-1] = self.cls(all_features[-1])
+
+        return all_features
+
+
+def get_resnet101_oc(num_layers=18, pretrained=True, num_classes=128, disable_self_attn=False):
+    model = ResNet_context(num_classes, disable_self_attn, pretrained, num_layers)
+    return model

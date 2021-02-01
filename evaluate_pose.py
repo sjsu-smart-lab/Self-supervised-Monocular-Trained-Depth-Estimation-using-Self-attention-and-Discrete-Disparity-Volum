@@ -13,6 +13,7 @@ from datasets import KITTIOdomDataset
 import networks
 
 
+# from https://github.com/tinghuiz/SfMLearner
 def dump_xyz(source_to_target_transformations):
     xyzs = []
     cam_to_world = np.eye(4)
@@ -23,6 +24,7 @@ def dump_xyz(source_to_target_transformations):
     return xyzs
 
 
+# from https://github.com/tinghuiz/SfMLearner
 def compute_ate(gtruth_xyz, pred_xyz_o):
 
     # Make sure that the first matched frames align (no need for rotational alignment as
