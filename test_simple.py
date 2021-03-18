@@ -174,8 +174,8 @@ def test_simple(args):
             print("   Processed {:d} of {:d} images - saved prediction to {}".format(
                 idx + 1, len(paths), name_dest_im))
 
-    print('Mean time elapsed: {:0.4f}'.format(np.mean(timings[11:])))
-    print('Std time elapsed: {:0.4f}'.format(np.std(timings[11:])))
+    # print('Mean time elapsed: {:0.4f}'.format(np.mean(timings[11:])))
+    # print('Std time elapsed: {:0.4f}'.format(np.std(timings[11:])))
     print('-> Done!')
 
 
