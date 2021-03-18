@@ -56,8 +56,6 @@ class SoftAttnDepth(nn.Module):
     def __init__(self, alpha=0.01, beta=1.0, dim=1, discretization='UD'):
         super(SoftAttnDepth, self).__init__()
         self.dim = dim
-
-        # The wokring ones uses: 0.01 and 1.0
         self.alpha = alpha
         self.beta = beta
         self.discretization = discretization
